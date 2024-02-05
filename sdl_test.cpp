@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_events.h>
 #include <SDL2/SDL_gamecontroller.h>
 #include <SDL2/SDL_sensor.h>
 #include <SDL2/SDL_stdinc.h>
@@ -37,10 +38,6 @@ int main () {
       cout<<SDL_GameControllerNameForIndex(i)<<"\n";
       }
     }
-  
-  
-
-
   /*test gyro*/
   if (SDL_GameControllerHasSensor(controller,SDL_SENSOR_GYRO)){
     cout << "Gyro Detected\n";
@@ -95,6 +92,48 @@ int main () {
         case SDL_CONTROLLERAXISMOTION:
           cout<<"\33[2K"<<SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis(event.caxis.axis))<<" "<<event.caxis.value<<"\n";
           break;
+      /*hot pluging*/
+        case SDL_CONTROLLERDEVICEADDED:
+          cout<<"\33[2K"<<"controller conected\n";
+          
+          /*controller initialization*/
+          for (int i=0;i<SDL_NumJoysticks();i++){
+            if(SDL_IsGameController(i)){
+              cout<<SDL_IsGameController(i)<<"\n";
+              controller = SDL_GameControllerOpen(i);
+              cout<<SDL_GameControllerNameForIndex(i)<<"\n";
+              }
+            }
+          /*test gyro*/
+          if (SDL_GameControllerHasSensor(controller,SDL_SENSOR_GYRO)){
+            cout << "Gyro Detected\n";
+            SDL_GameControllerSetSensorEnabled(controller,SDL_SENSOR_GYRO,SDL_TRUE);
+          }
+          else cout << "Gyro not Detected\n";
+
+          if(SDL_GameControllerIsSensorEnabled(controller, SDL_SENSOR_GYRO)){
+            cout<<"gyro enabled\n";
+            gyroEnabled=true;
+          }
+          else cout<<"gyro disabled\n";
+
+          /*test accelerometer*/
+          if (SDL_GameControllerHasSensor(controller,SDL_SENSOR_ACCEL)){
+            cout << "accelerometer Detected\n";
+            SDL_GameControllerSetSensorEnabled(controller,SDL_SENSOR_ACCEL,SDL_TRUE);
+          }
+          else cout << "accelerometer not Detected\n";
+
+          if(SDL_GameControllerIsSensorEnabled(controller, SDL_SENSOR_ACCEL)){
+            cout<<"accelerometer enabled\n";
+            accelEnabled=true;
+          }
+          else cout<<"accelerometer disabled\n";
+          break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+          cout<<"\33[2K"<<"controller removed\n";
+          break;
+      /*-------------------*/
         case SDL_QUIT:
           isRunning=false;
         default:
