@@ -8,18 +8,28 @@
 #include <ostream>
 #include <vector>
 #include <iomanip>
+#include <chrono>
+#include "GamepadMotion.hpp"
+
 using namespace std;
 int main () {
   SDL_Event event;  
   SDL_GameController *controller =nullptr;
   bool isRunning=true;
   bool gyroEnabled=false;
-  bool accelEnabled=false; 
+  bool accelEnabled=false;
+  float deltaTime=0.0;
   vector<float> gyro(3);
   vector<float> accel(3);
+  vector<float> orientation(4);
 	static constexpr float toDegPerSec = float(180. / M_PI);
 	static constexpr float toGs = 1.f / 9.8f;
+  chrono::steady_clock::time_point oldTime;
+  chrono::steady_clock::time_point newTime;
+  GamepadMotion gyroSensor;
 
+  cout.precision(5);
+  SDL_GameControllerGetSensorData(controller,SDL_SENSOR_GYRO, &gyro[0], 3);
   /*SDL initializATION*/
   SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
   if((SDL_Init(SDL_INIT_GAMECONTROLLER))<0){
@@ -70,9 +80,7 @@ int main () {
     /*IMU gyro*/
     if (gyroEnabled==true){
       cout<<fixed;
-      cout.precision(5);
-      SDL_GameControllerGetSensorData(controller,SDL_SENSOR_GYRO, &gyro[0], 3);
-      cout<<"gyro X= "<<setw(11)<<gyro[0]*toDegPerSec<<" gyro y= "<<setw(11)<<gyro[1]*toDegPerSec<<" gyro z= "<<setw(11)<<gyro[2]*toDegPerSec<<" -- ";
+      /*cout<<"gyro X= "<<setw(11)<<gyro[0]*toDegPerSec<<" gyro y= "<<setw(11)<<gyro[1]*toDegPerSec<<" gyro z= "<<setw(11)<<gyro[2]*toDegPerSec<<" -- ";*/
     }
 
     /*IMU accelerometer*/
@@ -80,9 +88,20 @@ int main () {
       cout<<fixed;
       cout.precision(5);
       SDL_GameControllerGetSensorData(controller,SDL_SENSOR_GYRO, &accel[0], 3);
-      cout<<"accel X= "<<setw(11)<<accel[0]*toGs<<" accel y= "<<setw(11)<<accel[1]*toGs<<" accel z= "<<setw(11)<<accel[2]*toGs<<"\r"<<flush;
+
+      newTime=chrono::steady_clock::now(); 
+      deltaTime=((float)chrono::duration_cast<chrono::microseconds>(oldTime-newTime).count()) / 1000000.0f;
+      gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime);
+    auto oldTime=chrono::steady_clock::now();
+      gyroSensor.GetOrientation(orientation[0], orientation[1], orientation[2], orientation[3]);
+      cout << "w= "<<setw(11)<<orientation[0]<<" x= "<<setw(11)<<orientation[1]<<" y= "<<setw(11)<<orientation[2]<<" z= "<<setw(11)<<orientation[3]<<"\r"<<flush;
+      /*cout<<"accel X= "<<setw(11)<<accel[0]*toGs<<" accel y= "<<setw(11)<<accel[1]*toGs<<" accel z= "<<setw(11)<<accel[2]*toGs<<"\r"<<flush*/;
     }
 
+    newTime=chrono::steady_clock::now(); 
+    deltaTime=((float)chrono::duration_cast<chrono::microseconds>(oldTime-newTime).count()) / 1000000.0f;
+    gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime); /* TODO: find a way to get deltaTime*/
+    auto oldTime=chrono::steady_clock::now();
     /*event loop*/
     while(SDL_PollEvent(&event)){
      switch (event.type) {
