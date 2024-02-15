@@ -24,8 +24,7 @@ vector<float> accel(3);
 vector<float> orientation(4);
 static constexpr float toDegPerSec = float(180. / M_PI);
 static constexpr float toGs = 1.f / 9.8f;
-chrono::steady_clock::time_point oldTime;
-chrono::steady_clock::time_point newTime;
+
 GamepadMotion gyroSensor;
 
 void controller_init(){
@@ -65,7 +64,12 @@ void controller_init(){
 }
 
 int main () {
+  
+  chrono::steady_clock::time_point oldTime;
+  chrono::steady_clock::time_point newTime;
 
+  newTime=chrono::steady_clock::now();
+  oldTime=newTime;
   cout.precision(5);
   cout<<fixed;
   SDL_GameControllerGetSensorData(controller,SDL_SENSOR_GYRO, &gyro[0], 3);
@@ -99,20 +103,27 @@ int main () {
 
     /*Sensor Fussion*/
     if (gyroEnabled && accelEnabled){
-      newTime=chrono::steady_clock::now(); 
-      deltaTime=((float)chrono::duration_cast<chrono::microseconds>(oldTime-newTime).count()) / 1000000.0f;
+      if (oldTime!=newTime)
+        newTime=chrono::steady_clock::now();
+
+      deltaTime=((float)chrono::duration_cast<chrono::microseconds>(newTime-oldTime).count()) / 1000000.0f;
+
       gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime);
       auto oldTime=chrono::steady_clock::now();
+
       gyroSensor.GetOrientation(orientation[0], orientation[1], orientation[2], orientation[3]);
       cout<<"orien X= "<<setw(8)<<orientation[1]<<" Y= "<<setw(8)<<orientation[2]<<" Z= "<<setw(8)<<orientation[3]<<" W= "<<setw(8)<<orientation[0]<<"\n";
+      cout<<deltaTime<<"\n";
     }
 
-    cout<<"\33[3F";
+    cout<<"\33[4F";
 
-    newTime=chrono::steady_clock::now(); 
+    if (newTime!=oldTime) newTime=chrono::steady_clock::now(); 
+
     deltaTime=((float)chrono::duration_cast<chrono::microseconds>(oldTime-newTime).count()) / 1000000.0f;
+
     gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime); 
-    auto oldTime=chrono::steady_clock::now();
+    oldTime=chrono::steady_clock::now();
 
     /*event loop*/
     while(SDL_PollEvent(&event)){
