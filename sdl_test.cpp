@@ -91,13 +91,13 @@ int main () {
     /*IMU gyro*/
     if (gyroEnabled==true){
       SDL_GameControllerGetSensorData(controller,SDL_SENSOR_GYRO, &gyro[0], 3);
-      cout<<"gyro  X= "<<setw(8)<<gyro[0]*toDegPerSec<<" Y= "<<setw(8)<<gyro[1]*toDegPerSec<<" Z= "<<setw(8)<<gyro[2]*toDegPerSec<<"\n";
+      cout<<"\33[K"<<"gyro  X= "<<setw(8)<<gyro[0]*toDegPerSec<<" Y= "<<setw(8)<<gyro[1]*toDegPerSec<<" Z= "<<setw(8)<<gyro[2]*toDegPerSec<<"\n";
     }
 
     /*IMU accelerometer*/
     if (accelEnabled==true){
       SDL_GameControllerGetSensorData(controller,SDL_SENSOR_ACCEL, &accel[0], 3);
-      cout<<"accel X= "<<setw(8)<<accel[0]*toGs<<" Y= "<<setw(8)<<accel[1]*toGs<<" Z= "<<setw(8)<<accel[2]*toGs<<"\n";
+      cout<<"\33[K"<<"accel X= "<<setw(8)<<accel[0]*toGs<<" Y= "<<setw(8)<<accel[1]*toGs<<" Z= "<<setw(8)<<accel[2]*toGs<<"\n";
     }
 
 
@@ -112,8 +112,8 @@ int main () {
       auto oldTime=chrono::steady_clock::now();
 
       gyroSensor.GetOrientation(orientation[0], orientation[1], orientation[2], orientation[3]);
-      cout<<"orien X= "<<setw(8)<<orientation[1]<<" Y= "<<setw(8)<<orientation[2]<<" Z= "<<setw(8)<<orientation[3]<<" W= "<<setw(8)<<orientation[0]<<"\n";
-      cout<<deltaTime<<"\n";
+      cout<<"\33[K"<<"orien X= "<<setw(8)<<orientation[1]<<" Y= "<<setw(8)<<orientation[2]<<" Z= "<<setw(8)<<orientation[3]<<" W= "<<setw(8)<<orientation[0]<<"\n";
+      cout<<"\33[K"<<deltaTime<<"\n";
     }
 
     cout<<"\33[4F";
@@ -129,21 +129,26 @@ int main () {
     while(SDL_PollEvent(&event)){
       switch (event.type) {
         case SDL_CONTROLLERBUTTONDOWN:
-          cout<<"\33[2K"<<SDL_GameControllerGetStringForButton(SDL_GameControllerButton(event.cbutton.button))<<"\n"; 
+          cout<<"\33[1F";
+          cout<<"\n";
+          cout<<"\33[K";
+          cout<<SDL_GameControllerGetStringForButton(SDL_GameControllerButton(event.cbutton.button))<<"\n"; 
           break;
         case SDL_CONTROLLERAXISMOTION:
-          cout<<"\33[2K"<<SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis(event.caxis.axis))<<" "<<event.caxis.value<<"\n";
+          /*cout<<SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis(event.caxis.axis))<<" "<<event.caxis.value<<"\n";*/
           break;
         /*hot pluging*/
         case SDL_CONTROLLERDEVICEADDED:
-          cout<<"\33[2K"<<"controller conected\n";
+          cout<<"controller conected\n";
           controller_init();
           break;
         case SDL_CONTROLLERDEVICEREMOVED:
-          cout<<"\33[2K"<<"controller removed\n";
+          cout<<"controller removed\n";
           break;
       /*-------------------*/
         case SDL_QUIT:
+          cout<<"\33[4E";
+          cout<<"Quiting SDL.\n";
           isRunning=false;
         default:
           break;
@@ -153,7 +158,6 @@ int main () {
 
 
   /*SDL  quit*/
-  cout<<"\33[2K"<<"Quiting SDL.\n";
   SDL_Quit();
   return 0;
 }
