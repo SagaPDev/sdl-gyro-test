@@ -139,11 +139,17 @@ int main () {
           break;
         /*hot pluging*/
         case SDL_CONTROLLERDEVICEADDED:
-          cout<<"controller conected\n";
-          controller_init();
+          if (!controller){
+            cout<<"controller conected\n";
+            controller_init();
+          }
           break;
         case SDL_CONTROLLERDEVICEREMOVED:
+          SDL_GameControllerClose(controller);
+          controller=nullptr;
           cout<<"controller removed\n";
+          gyroEnabled=false;
+          accelEnabled=false;
           break;
       /*-------------------*/
         case SDL_QUIT:
