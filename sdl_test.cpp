@@ -109,7 +109,7 @@ int main () {
       deltaTime=((float)chrono::duration_cast<chrono::microseconds>(newTime-oldTime).count()) / 1000000.0f;
 
       gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime);
-      auto oldTime=chrono::steady_clock::now();
+      oldTime=chrono::steady_clock::now();
 
       gyroSensor.GetOrientation(orientation[0], orientation[1], orientation[2], orientation[3]);
       cout<<"\33[K"<<"orien X= "<<setw(8)<<orientation[1]<<" Y= "<<setw(8)<<orientation[2]<<" Z= "<<setw(8)<<orientation[3]<<" W= "<<setw(8)<<orientation[0]<<"\n";
@@ -117,13 +117,6 @@ int main () {
     }
 
     cout<<"\33[4F";
-
-    if (newTime!=oldTime) newTime=chrono::steady_clock::now(); 
-
-    deltaTime=((float)chrono::duration_cast<chrono::microseconds>(oldTime-newTime).count()) / 1000000.0f;
-
-    gyroSensor.ProcessMotion(gyro[0]*toDegPerSec, gyro[1]*toDegPerSec, gyro[2]*toDegPerSec, accel[0]*toGs, accel[1]*toGs, accel[2]*toGs,deltaTime); 
-    oldTime=chrono::steady_clock::now();
 
     /*event loop*/
     while(SDL_PollEvent(&event)){
