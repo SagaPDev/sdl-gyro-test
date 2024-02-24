@@ -1,2 +1,4 @@
 sdl_test
 *.cast
+*.o
+*.dblite
