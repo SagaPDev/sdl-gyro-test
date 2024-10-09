@@ -1,8 +1,4 @@
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_events.h>
-#include <SDL2/SDL_gamecontroller.h>
-#include <SDL2/SDL_sensor.h>
-#include <SDL2/SDL_stdinc.h>
 #include <ios>
 #include <iostream>
 #include <ostream>
@@ -19,48 +15,59 @@ bool isRunning=true;
 bool gyroEnabled=false;
 bool accelEnabled=false;
 float deltaTime=0.0;
+vector<float> gravity(3);
 vector<float> gyro(3);
 vector<float> accel(3);
 vector<float> orientation(4);
+int count=0;
+
 static constexpr float toDegPerSec = float(180. / M_PI);
 static constexpr float toGs = 1.f / 9.8f;
 
 GamepadMotion gyroSensor;
 
 void controller_init(){
+  SDL_GameController *test_controller =nullptr;
+  bool test_gyroEnabled;
+  bool test_accelEnabled;
   /*controller initialization*/
   for (int i=0;i<SDL_NumJoysticks();i++){
-    if(SDL_IsGameController(i)){
-      cout<<SDL_IsGameController(i)<<"\n";
-      controller = SDL_GameControllerOpen(i);
-      cout<<SDL_GameControllerNameForIndex(i)<<"\n";
+    if (SDL_IsGameController(i)){
+      cout<<SDL_GameControllerNameForIndex(i)<<" detected"<<"\n";
+      test_controller = SDL_GameControllerOpen(i);
+      if(SDL_IsGameController(i)){
+        /*test gyro*/
+        if (SDL_GameControllerHasSensor(test_controller,SDL_SENSOR_GYRO)){
+          cout << "Gyro Detected\n";
+          SDL_GameControllerSetSensorEnabled(test_controller,SDL_SENSOR_GYRO,SDL_TRUE);
+          test_gyroEnabled=true;
+        }
+        else {
+          cout<<"gyro not detected\n";
+          test_gyroEnabled=false;
+        }
+
+        /*test accelerometer*/
+        if (SDL_GameControllerHasSensor(test_controller,SDL_SENSOR_ACCEL)){
+          cout << "accelerometer Detected\n";
+          SDL_GameControllerSetSensorEnabled(test_controller,SDL_SENSOR_ACCEL,SDL_TRUE);
+        }
+        else{
+          cout << "accelerometer not Detected\n";
+          test_accelEnabled=false;
+        }
       }
-    }
-  /*test gyro*/
-  if (SDL_GameControllerHasSensor(controller,SDL_SENSOR_GYRO)){
-    cout << "Gyro Detected\n";
-    SDL_GameControllerSetSensorEnabled(controller,SDL_SENSOR_GYRO,SDL_TRUE);
-  }
-  else cout << "Gyro not Detected\n";
-
-  if(SDL_GameControllerIsSensorEnabled(controller, SDL_SENSOR_GYRO)){
-    cout<<"gyro enabled\n";
-    gyroEnabled=true;
-  }
-  else cout<<"gyro disabled\n";
-
-  /*test accelerometer*/
-  if (SDL_GameControllerHasSensor(controller,SDL_SENSOR_ACCEL)){
-    cout << "accelerometer Detected\n";
-    SDL_GameControllerSetSensorEnabled(controller,SDL_SENSOR_ACCEL,SDL_TRUE);
-  }
-  else cout << "accelerometer not Detected\n";
-
-      if(SDL_GameControllerIsSensorEnabled(controller, SDL_SENSOR_ACCEL)){
-        cout<<"accelerometer enabled\n";
+      if (test_accelEnabled && test_gyroEnabled){
+        cout<<"\n";
+        controller = test_controller;
+        cout<<SDL_GameControllerNameForIndex(i)<<"\n";
+        gyroEnabled=true;
         accelEnabled=true;
       }
-      else cout<<"accelerometer disabled\n";
+    }
+  }
+
+
 }
 
 int main () {
@@ -85,7 +92,6 @@ int main () {
   }
 
   controller_init();
-
   /*GAME LOOP*/
   while(isRunning){
     /*IMU gyro*/
@@ -125,7 +131,8 @@ int main () {
           cout<<"\33[1F";
           cout<<"\n";
           cout<<"\33[K";
-          cout<<SDL_GameControllerGetStringForButton(SDL_GameControllerButton(event.cbutton.button))<<"\n"; 
+          gyroSensor.GetGravity(gravity[0],gravity[1],gravity[2]);
+          cout<<SDL_GameControllerGetStringForButton(SDL_GameControllerButton(event.cbutton.button))<<" "<<gravity[0]<<"/"<<gravity[1]<<"/"<<gravity[2]<<"\n"; 
           break;
         case SDL_CONTROLLERAXISMOTION:
           /*cout<<SDL_GameControllerGetStringForAxis(SDL_GameControllerAxis(event.caxis.axis))<<" "<<event.caxis.value<<"\n";*/
